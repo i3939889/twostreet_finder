@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+output/data/*.json
+output/logs/*.log
+output/logs/*.jsonl
+output/artifacts/
+output/runs/*.json
+
