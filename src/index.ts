@@ -11,7 +11,12 @@ async function main(): Promise<void> {
   const config = applyCliOverrides(loadConfig());
   const runId = createRunId();
   const outputPaths = await ensureOutputPaths(config.outputDir, runId);
-  const logger = createLogger(config.logLevel, runId, outputPaths.appLogFile);
+  const logger = createLogger(
+    config.logLevel,
+    runId,
+    outputPaths.appLogFile,
+    outputPaths.runLogFile,
+  );
 
   logger.info(
     {

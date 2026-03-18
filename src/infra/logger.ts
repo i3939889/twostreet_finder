@@ -2,7 +2,12 @@ import pino, { type Logger } from "pino";
 import path from "node:path";
 import type { LogLevel } from "../models/config";
 
-export function createLogger(level: LogLevel, runId: string, appLogFile: string): Logger {
+export function createLogger(
+  level: LogLevel,
+  runId: string,
+  appLogFile: string,
+  runLogFile: string,
+): Logger {
   return pino(
     {
       level,
@@ -11,11 +16,21 @@ export function createLogger(level: LogLevel, runId: string, appLogFile: string)
       },
       timestamp: pino.stdTimeFunctions.isoTime,
     },
-    pino.destination({
-      dest: path.resolve(appLogFile),
-      mkdir: true,
-      sync: false,
-    }),
+    pino.multistream([
+      {
+        stream: pino.destination({
+          dest: path.resolve(appLogFile),
+          mkdir: true,
+          sync: false,
+        }),
+      },
+      {
+        stream: pino.destination({
+          dest: path.resolve(runLogFile),
+          mkdir: true,
+          sync: false,
+        }),
+      },
+    ]),
   );
 }
-

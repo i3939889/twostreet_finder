@@ -4,6 +4,7 @@ import type { Product } from "../models/product";
 import type { CrawlResult, RunError, RunSummary } from "../models/run-result";
 import { nowIso } from "../infra/clock";
 import type { OutputPaths } from "../infra/fs";
+import { writeText } from "../infra/fs";
 import { createPage, launchBrowser } from "../infra/playwright";
 import { SiteNavigator } from "./navigator";
 import { ProductScraper } from "./scraper";
@@ -77,7 +78,23 @@ export async function runCrawler(
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         const stack = error instanceof Error ? error.stack : undefined;
-        errors.push({ subCategory, message, stack });
+        const artifactBaseName = `error-${sanitizeFileName(subCategory)}`;
+        const screenshotFile = `${outputPaths.runArtifactsDir}\\${artifactBaseName}.png`;
+        const htmlFile = `${outputPaths.runArtifactsDir}\\${artifactBaseName}.html`;
+
+        await page.screenshot({ path: screenshotFile, fullPage: true }).catch(() => undefined);
+        const html = await page.content().catch(() => "");
+        if (html) {
+          await writeText(htmlFile, html).catch(() => undefined);
+        }
+
+        errors.push({
+          subCategory,
+          message,
+          stack,
+          screenshotFile,
+          htmlFile: html ? htmlFile : undefined,
+        });
         logger.error({ module: "crawler", subCategory, err: error }, "Subcategory failed");
       }
     }
@@ -112,3 +129,6 @@ export async function runCrawler(
   };
 }
 
+function sanitizeFileName(input: string): string {
+  return input.replace(/[<>:"/\\|?*]+/g, "_").trim() || "unknown";
+}

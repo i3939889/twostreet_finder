@@ -4,6 +4,8 @@ export type RunError = {
   subCategory?: string;
   message: string;
   stack?: string;
+  screenshotFile?: string;
+  htmlFile?: string;
 };
 
 export type RunSummary = {
@@ -26,4 +28,3 @@ export type CrawlResult = {
   products: Product[];
   summary: RunSummary;
 };
-
