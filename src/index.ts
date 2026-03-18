@@ -9,7 +9,7 @@ import { applyCliOverrides } from "./cli";
 
 async function main(): Promise<void> {
   const config = applyCliOverrides(loadConfig());
-  const runId = createRunId();
+  const runId = createRunId(config.timeZone);
   const outputPaths = await ensureOutputPaths(config.outputDir, runId);
   const logger = createLogger(
     config.logLevel,
@@ -24,6 +24,8 @@ async function main(): Promise<void> {
       mainCategory: config.mainCategory,
       subCategories: config.subCategories,
       storeNames: config.storeNames,
+      browser: config.browser,
+      timeZone: config.timeZone,
     },
     "Configuration loaded",
   );

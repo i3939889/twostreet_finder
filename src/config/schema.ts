@@ -13,6 +13,8 @@ export const envSchema = z
     SUB_CAT: z.string().trim().min(1, "SUB_CAT is required"),
     STORE_NAME: z.string().trim().min(1, "STORE_NAME is required"),
     HEADLESS: z.enum(["true", "false"]).default("true"),
+    BROWSER: z.enum(["chromium", "firefox"]).default("chromium"),
+    TIME_ZONE: z.string().trim().min(1).optional(),
     OUTPUT_DIR: z.string().trim().min(1).default("output"),
     LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
     MAX_SCROLL_IDLE_ROUNDS: positiveInt.default(3),
@@ -26,6 +28,8 @@ export const envSchema = z
     subCategories: splitCsv(raw.SUB_CAT),
     storeNames: splitCsv(raw.STORE_NAME),
     headless: raw.HEADLESS === "true",
+    browser: raw.BROWSER,
+    timeZone: raw.TIME_ZONE?.trim() || Intl.DateTimeFormat().resolvedOptions().timeZone,
     outputDir: raw.OUTPUT_DIR.trim(),
     logLevel: raw.LOG_LEVEL,
     maxScrollIdleRounds: raw.MAX_SCROLL_IDLE_ROUNDS,
@@ -40,4 +44,3 @@ export const envSchema = z
   .refine((value) => value.storeNames.length > 0, {
     error: "STORE_NAME must contain at least one value",
   });
-

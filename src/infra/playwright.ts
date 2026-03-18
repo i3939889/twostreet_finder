@@ -1,8 +1,10 @@
-import { chromium, type Browser, type Page } from "playwright";
+import { chromium, firefox, type Browser, type Page } from "playwright";
 import type { AppConfig } from "../models/config";
 
 export async function launchBrowser(config: AppConfig): Promise<Browser> {
-  return chromium.launch({
+  const launcher = config.browser === "firefox" ? firefox : chromium;
+
+  return launcher.launch({
     headless: config.headless,
     slowMo: config.slowMoMs,
   });
@@ -14,4 +16,3 @@ export async function createPage(browser: Browser, config: AppConfig): Promise<P
   page.setDefaultNavigationTimeout(config.navigationTimeoutMs);
   return page;
 }
-

@@ -1,10 +1,13 @@
 export type LogLevel = "debug" | "info" | "warn" | "error";
+export type BrowserName = "chromium" | "firefox";
 
 export type AppConfig = {
   mainCategory: string;
   subCategories: string[];
   storeNames: string[];
   headless: boolean;
+  browser: BrowserName;
+  timeZone: string;
   outputDir: string;
   logLevel: LogLevel;
   maxScrollIdleRounds: number;
@@ -19,6 +22,8 @@ export type RawEnvConfig = {
   SUB_CAT: string;
   STORE_NAME: string;
   HEADLESS?: string;
+  BROWSER?: BrowserName;
+  TIME_ZONE?: string;
   OUTPUT_DIR?: string;
   LOG_LEVEL?: LogLevel;
   MAX_SCROLL_IDLE_ROUNDS?: string;
@@ -27,4 +32,3 @@ export type RawEnvConfig = {
   ACTION_TIMEOUT_MS?: string;
   SLOW_MO_MS?: string;
 };
-
