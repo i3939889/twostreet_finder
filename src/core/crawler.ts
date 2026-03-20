@@ -11,6 +11,7 @@ import { ProductScraper } from "./scraper";
 import { PageScroller } from "./scroller";
 import { toMatchedProduct } from "./filter";
 import { dedupeProducts } from "./dedupe";
+import { ProductDetailScraper } from "./detail-scraper";
 
 export async function runCrawler(
   config: AppConfig,
@@ -29,8 +30,10 @@ export async function runCrawler(
 
   try {
     const page = await createPage(browser, config);
+    const detailPage = await createPage(browser, config);
     const navigator = new SiteNavigator(page);
     const scraper = new ProductScraper(page);
+    const detailScraper = new ProductDetailScraper(detailPage);
     const scroller = new PageScroller(page);
 
     logger.info({ module: "crawler" }, "Browser launched");
@@ -64,6 +67,10 @@ export async function runCrawler(
           )
           .filter((product): product is Product => product !== null);
 
+        for (const product of matched) {
+          product.detail = await detailScraper.fetchProductDetail(product.url);
+        }
+
         totalMatched += matched.length;
         allProducts.push(...matched);
         logger.info(
@@ -72,6 +79,7 @@ export async function runCrawler(
             subCategory,
             rawCount: rawProducts.length,
             matchedCount: matched.length,
+            detailFetchedCount: matched.length,
           },
           "Subcategory collection finished",
         );
