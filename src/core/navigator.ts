@@ -11,25 +11,21 @@ export class SiteNavigator {
     await this.page.goto(BASE_URL, {
       waitUntil: "domcontentloaded",
     });
-
-    const acceptCookiesLink = this.page.getByRole("link", { name: COOKIE_ACCEPT_TEXT });
-    if (await acceptCookiesLink.isVisible().catch(() => false)) {
-      await acceptCookiesLink.click();
-    }
+    await this.page.waitForLoadState("networkidle").catch(() => undefined);
+    await this.dismissCookieBanner();
   }
 
   async openMainCategory(mainCategory: string): Promise<void> {
-    const categoryLink = this.page.getByRole("link", {
-      name: mainCategory,
-      exact: true,
-    });
+    const html = await this.page.content();
+    const targetUrl = extractMainCategoryUrl(html, mainCategory);
 
-    if (!(await categoryLink.first().isVisible().catch(() => false))) {
+    if (!targetUrl) {
       throw new NavigationError(`Main category not found: ${mainCategory}`);
     }
 
-    await categoryLink.first().click();
-    await this.page.waitForLoadState("domcontentloaded");
+    await this.page.goto(targetUrl, {
+      waitUntil: "domcontentloaded",
+    });
   }
 
   async openSubCategory(subCategory: string): Promise<void> {
@@ -44,6 +40,37 @@ export class SiteNavigator {
       waitUntil: "domcontentloaded",
     });
   }
+
+  private async dismissCookieBanner(): Promise<void> {
+    const acceptCookiesLink = this.page.getByRole("link", { name: COOKIE_ACCEPT_TEXT });
+    if (await acceptCookiesLink.isVisible().catch(() => false)) {
+      await acceptCookiesLink.click();
+    }
+  }
+}
+
+export function extractMainCategoryUrl(html: string, mainCategory: string): string | null {
+  const escapedMainCategory = escapeForRegExp(mainCategory);
+  const patterns = [
+    new RegExp(
+      `<a[^>]*href="([^"]+)"[^>]*>\\s*(?:<img[^>]*alt="${escapedMainCategory}"[^>]*>|${escapedMainCategory})`,
+      "i",
+    ),
+    new RegExp(
+      `<a[^>]*href="([^"]+)"[^>]*>.*?<img[^>]*alt="${escapedMainCategory}"[^>]*>.*?<\\/a>`,
+      "i",
+    ),
+  ];
+
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+
+    if (match?.[1]) {
+      return new URL(decodeEmbeddedUrl(match[1]), BASE_URL).toString();
+    }
+  }
+
+  return null;
 }
 
 export function extractSubCategoryUrl(html: string, subCategory: string): string | null {
@@ -69,6 +96,5 @@ function escapeForRegExp(input: string): string {
 }
 
 function decodeEmbeddedUrl(input: string): string {
-  const decoded = input.replace(/\\u002F/g, "/").replace(/\\/g, "");
-  return new URL(decoded, BASE_URL).toString();
+  return input.replace(/\\u002F/g, "/").replace(/\\/g, "");
 }

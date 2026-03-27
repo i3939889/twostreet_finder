@@ -21,14 +21,14 @@ export function createLogger(
         stream: pino.destination({
           dest: path.resolve(appLogFile),
           mkdir: true,
-          sync: false,
+          sync: true,
         }),
       },
       {
         stream: pino.destination({
           dest: path.resolve(runLogFile),
           mkdir: true,
-          sync: false,
+          sync: true,
         }),
       },
     ]),

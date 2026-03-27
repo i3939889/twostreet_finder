@@ -1,6 +1,16 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { extractSubCategoryUrl } from "../core/navigator";
+import { extractMainCategoryUrl, extractSubCategoryUrl } from "../core/navigator";
+
+test("extractMainCategoryUrl parses category anchor href", () => {
+  const html =
+    '<a href="//store.2ndstreet.com.tw/v2/official/SalePageCategory/427305"><img alt="男裝" /></a>';
+
+  assert.equal(
+    extractMainCategoryUrl(html, "男裝"),
+    "https://store.2ndstreet.com.tw/v2/official/SalePageCategory/427305",
+  );
+});
 
 test("extractSubCategoryUrl parses embedded linkUrl payload", () => {
   const html =
