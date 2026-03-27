@@ -12,6 +12,7 @@ export type AppConfig = {
   logLevel: LogLevel;
   maxScrollIdleRounds: number;
   maxScrollRounds: number;
+  subCategoryTimeoutMs: number;
   navigationTimeoutMs: number;
   actionTimeoutMs: number;
   slowMoMs: number;
@@ -28,6 +29,7 @@ export type RawEnvConfig = {
   LOG_LEVEL?: LogLevel;
   MAX_SCROLL_IDLE_ROUNDS?: string;
   MAX_SCROLL_ROUNDS?: string;
+  SUB_CATEGORY_TIMEOUT_MS?: string;
   NAVIGATION_TIMEOUT_MS?: string;
   ACTION_TIMEOUT_MS?: string;
   SLOW_MO_MS?: string;

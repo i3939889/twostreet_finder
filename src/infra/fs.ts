@@ -9,6 +9,7 @@ export type OutputPaths = {
   runsDir: string;
   runArtifactsDir: string;
   latestDataFile: string;
+  stagedDataFile: string;
   productsDataFile: string;
   runLogFile: string;
   appLogFile: string;
@@ -44,6 +45,7 @@ export async function ensureOutputPaths(outputDir: string, runId: string): Promi
     runsDir,
     runArtifactsDir,
     latestDataFile: path.join(dataDir, "latest.json"),
+    stagedDataFile: path.join(dataDir, `matched-${runId}.json`),
     productsDataFile: path.join(dataDir, `products-${runId}.json`),
     runLogFile: path.join(logsDir, `run-${runId}.jsonl`),
     appLogFile: path.join(logsDir, "app.log"),

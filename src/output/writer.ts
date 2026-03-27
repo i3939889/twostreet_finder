@@ -3,6 +3,13 @@ import type { RunSummary } from "../models/run-result";
 import type { OutputPaths } from "../infra/fs";
 import { writeJson } from "../infra/fs";
 
+export async function writeStagedProducts(
+  products: Product[],
+  outputPaths: OutputPaths,
+): Promise<void> {
+  await writeJson(outputPaths.stagedDataFile, products);
+}
+
 export async function writeProducts(products: Product[], outputPaths: OutputPaths): Promise<void> {
   await Promise.all([
     writeJson(outputPaths.productsDataFile, products),
@@ -13,4 +20,3 @@ export async function writeProducts(products: Product[], outputPaths: OutputPath
 export async function writeSummary(summary: RunSummary, outputPaths: OutputPaths): Promise<void> {
   await writeJson(outputPaths.summaryFile, summary);
 }
-

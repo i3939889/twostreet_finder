@@ -19,6 +19,8 @@ export type RunSummary = {
   totalCollected: number;
   totalMatched: number;
   totalDeduped: number;
+  totalDetailed: number;
+  stagedFile: string;
   outputFile: string;
   logFile: string;
   errors: RunError[];

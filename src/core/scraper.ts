@@ -1,46 +1,78 @@
 import type { Page } from "playwright";
 import type { RawProduct } from "../models/product";
 
+type ProductDomSnapshot = {
+  href: string | null;
+  imageAlt?: string;
+  imageSrc?: string;
+  texts: string[];
+};
+
 export class ProductScraper {
   constructor(private readonly page: Page) {}
 
   async collectVisibleProducts(): Promise<RawProduct[]> {
-    const productLinks = await this.page.locator('a[href*="/SalePage/Index/"]').all();
-    const products: RawProduct[] = [];
-
-    for (const link of productLinks) {
-      const url = await link.getAttribute("href");
-
-      if (!url) {
-        continue;
-      }
-
-      const texts = (await link.locator("div, span, p").allTextContents())
-        .map((text) => text.trim())
-        .filter(Boolean);
-
-      const image = link.locator("img").first();
-      const imageAlt = (await image.getAttribute("alt"))?.trim();
-      const imageSrc = await image.getAttribute("src");
-
-      const title = texts.find((text) => text.includes("【")) ?? imageAlt ?? "";
-      const price = extractPrice(texts);
-
-      if (!title) {
-        continue;
-      }
-
-      products.push({
-        title,
-        url: new URL(url, this.page.url()).toString(),
-        price,
-        imageUrl: normalizeImageUrl(imageSrc),
-        productId: url.split("/").pop() ?? undefined,
-      });
+    if (this.page.isClosed()) {
+      return [];
     }
 
-    return products;
+    const snapshots = await this.page.locator('a[href*="/SalePage/Index/"]').evaluateAll((links) =>
+      links.map((link) => {
+        const anchor = link as HTMLAnchorElement;
+        const image = anchor.querySelector("img");
+        const textNodes = Array.from(anchor.querySelectorAll("div, span, p"))
+          .map((node) => node.textContent?.trim() ?? "")
+          .filter(Boolean);
+
+        return {
+          href: anchor.getAttribute("href"),
+          imageAlt: image?.getAttribute("alt")?.trim() ?? undefined,
+          imageSrc: image?.getAttribute("src") ?? undefined,
+          texts: textNodes,
+        };
+      }),
+    );
+
+    return snapshots
+      .map((snapshot) => toRawProduct(snapshot, this.page.url()))
+      .filter((product): product is RawProduct => product !== null);
   }
+}
+
+export function toRawProduct(snapshot: ProductDomSnapshot, baseUrl: string): RawProduct | null {
+  if (!snapshot.href) {
+    return null;
+  }
+
+  const title = extractTitle(snapshot);
+
+  if (!title) {
+    return null;
+  }
+
+  return {
+    title,
+    url: new URL(snapshot.href, baseUrl).toString(),
+    price: extractPrice(snapshot.texts),
+    imageUrl: normalizeImageUrl(snapshot.imageSrc),
+    productId: snapshot.href.split("/").pop() ?? undefined,
+  };
+}
+
+function extractTitle(snapshot: ProductDomSnapshot): string | undefined {
+  const candidates = [
+    ...snapshot.texts.map((text) => text.trim()),
+    snapshot.imageAlt?.trim() ?? "",
+  ].filter(Boolean);
+
+  const nonPriceCandidates = candidates.filter((text) => !/^NT\$\s?[\d,]+$/.test(text));
+  const withSlash = nonPriceCandidates.find((text) => text.includes("/"));
+
+  if (withSlash) {
+    return withSlash;
+  }
+
+  return nonPriceCandidates[0];
 }
 
 function extractPrice(texts: string[]): string | undefined {
@@ -55,7 +87,7 @@ function extractPrice(texts: string[]): string | undefined {
   return undefined;
 }
 
-function normalizeImageUrl(src: string | null): string | undefined {
+function normalizeImageUrl(src: string | null | undefined): string | undefined {
   if (!src) {
     return undefined;
   }
